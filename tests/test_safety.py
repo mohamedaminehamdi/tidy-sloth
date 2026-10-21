@@ -82,3 +82,26 @@ def test_leftovers_of_one_kind_get_a_new_folder(tmp_path):
     plan.suggest_new_folders(items, tmp_path)
     assert {i["folder_name"] for i in items[:3]} == {"Books"} and all(i["by"] == "new_folder" for i in items[:3])
     assert items[3]["action"] == "leave"  # one video isn't a pattern
+
+
+def test_server_refuses_other_hosts_and_origins():
+    import threading, urllib.request, urllib.error
+    from http.server import ThreadingHTTPServer
+    from tidy_sloth import server
+    server.Handler.state["plan"] = {"items": [], "skipped": [], "summary": {}}
+    httpd = ThreadingHTTPServer(("127.0.0.1", 0), server.Handler)
+    threading.Thread(target=httpd.serve_forever, daemon=True).start()
+    url, port = f"http://127.0.0.1:{httpd.server_port}/api/plan", httpd.server_port
+
+    def status(headers, method="GET"):
+        req = urllib.request.Request(url, headers=headers, method=method, data=b"{}" if method == "POST" else None)
+        try:
+            return urllib.request.urlopen(req).status
+        except urllib.error.HTTPError as e:
+            return e.code
+    try:
+        assert status({}) == 200
+        assert status({"Host": f"evil.example:{port}"}) == 403  # DNS rebinding
+        assert status({"Origin": "https://evil.example"}, "POST") == 403
+    finally:
+        httpd.shutdown()

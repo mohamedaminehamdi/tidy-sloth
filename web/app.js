@@ -4,13 +4,13 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let plan;
 
-function headline(s) {
-  if (!s.files) return ['Nothing to tidy.', 'Your Downloads and Desktop are already clean. Go back to the hammock.'];
+function headline(s, skipped) {
+  if (!s.files && !skipped) return ['Nothing to tidy.', 'Your Downloads and Desktop are already clean. Go back to the hammock.'];
   const parts = [];
   if (s.moves) parts.push(`put ${s.moves} away`);
   if (s.renames) parts.push(`rename ${s.renames}`);
-  if (s.left) parts.push(`leave ${s.left} alone`);
-  return [`${s.files} loose files.`, `I'll ${parts.join(', ').replace(/, ([^,]*)$/, ' and $1')}.`];
+  if (s.left + skipped) parts.push(`leave ${s.left + skipped} alone`);
+  return [`${s.files + skipped} loose files.`, `I'll ${parts.join(', ').replace(/, ([^,]*)$/, ' and $1')}.`];
 }
 
 function row(item) {
@@ -19,12 +19,12 @@ function row(item) {
     : item.by === 'tabpfn' ? `<span class="tag">${Math.round(item.confidence * 100)}% sure</span>` : '';
   const rename = item.new_name ? `<input class="to" data-id="${item.id}" value="${esc(item.new_name)}" aria-label="New name for ${esc(item.name)}">` : '';
   return `<div class="row"><input type="checkbox" checked data-pick="${item.id}" aria-label="Include ${esc(item.name)}">
-    <div class="file">${item.new_name ? `<div class="from">${esc(item.name)}</div>${rename}` : `<div class="name">${esc(item.name)}</div>`}</div>${tag}</div>`;
+    <div class="file">${item.new_name ? `<div class="from">${esc(item.name)} ${tag}</div>${rename}` : `<div class="name">${esc(item.name)}</div>`}</div>${item.new_name ? '' : tag}</div>`;
 }
 
 function render() {
   const s = plan.summary;
-  const [h, l] = headline(s);
+  const [h, l] = headline(s, plan.skipped.length);
   $('headline').textContent = h;
   $('lede').textContent = l;
   if (s.minutes_saved) {

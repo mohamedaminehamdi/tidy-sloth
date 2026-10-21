@@ -25,14 +25,22 @@ class Handler(SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _local(self):
+        """Host must be this machine (blocks DNS rebinding); Origin, when sent, must be the review page itself."""
+        port = self.server.server_port
+        ours = {f"127.0.0.1:{port}", f"localhost:{port}"}
+        origin = self.headers.get("Origin")
+        return self.headers.get("Host") in ours and (origin is None or origin in {f"http://{h}" for h in ours})
+
     def do_GET(self):
+        if not self._local():
+            return self._json({"error": "forbidden"}, 403)
         if self.path == "/api/plan":
             return self._json(self.state["plan"])
         return super().do_GET()
 
     def do_POST(self):
-        # Only same-origin requests from the review page may change files.
-        if self.headers.get("Origin") not in (None, f"http://127.0.0.1:{self.server.server_port}", f"http://localhost:{self.server.server_port}"):
+        if not self._local():  # only the review page on this machine may change files
             return self._json({"error": "forbidden"}, 403)
         length = min(int(self.headers.get("Content-Length") or 0), 1_000_000)
         body = json.loads(self.rfile.read(length) or b"{}")

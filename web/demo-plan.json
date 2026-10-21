@@ -1,0 +1,239 @@
+{
+ "created": "2026-10-22 07:00",
+ "items": [
+  {
+   "id": 0,
+   "path": "/Users/you/Downloads/IMG_4821.HEIC",
+   "name": "IMG_4821.HEIC",
+   "folder": "/Users/you/Desktop/Lisbon 2026",
+   "folder_name": "Lisbon 2026",
+   "confidence": 0.99,
+   "by": "tabpfn",
+   "new_name": "tram 28 climbing alfama.heic",
+   "action": "move+rename"
+  },
+  {
+   "id": 1,
+   "path": "/Users/you/Downloads/IMG_4822.HEIC",
+   "name": "IMG_4822.HEIC",
+   "folder": "/Users/you/Desktop/Lisbon 2026",
+   "folder_name": "Lisbon 2026",
+   "confidence": 0.99,
+   "by": "tabpfn",
+   "new_name": "pasteis de nata box.heic",
+   "action": "move+rename"
+  },
+  {
+   "id": 2,
+   "path": "/Users/you/Downloads/IMG_4830.MOV",
+   "name": "IMG_4830.MOV",
+   "folder": "/Users/you/Desktop/Lisbon 2026",
+   "folder_name": "Lisbon 2026",
+   "confidence": 0.97,
+   "by": "tabpfn",
+   "new_name": null,
+   "action": "move"
+  },
+  {
+   "id": 3,
+   "path": "/Users/you/Desktop/IMG_4907.HEIC",
+   "name": "IMG_4907.HEIC",
+   "folder": "/Users/you/Desktop/Lisbon 2026",
+   "folder_name": "Lisbon 2026",
+   "confidence": 0.94,
+   "by": "tabpfn",
+   "new_name": "sunset from miradouro.heic",
+   "action": "move+rename"
+  },
+  {
+   "id": 4,
+   "path": "/Users/you/Downloads/W2_2026_final.pdf",
+   "name": "W2_2026_final.pdf",
+   "folder": "/Users/you/Desktop/Taxes 2026",
+   "folder_name": "Taxes 2026",
+   "confidence": 0.98,
+   "by": "tabpfn",
+   "new_name": null,
+   "action": "move"
+  },
+  {
+   "id": 5,
+   "path": "/Users/you/Downloads/document (3).pdf",
+   "name": "document (3).pdf",
+   "folder": "/Users/you/Desktop/Taxes 2026",
+   "folder_name": "Taxes 2026",
+   "confidence": 0.61,
+   "by": "gemma",
+   "new_name": "property tax notice 2026.pdf",
+   "action": "move+rename"
+  },
+  {
+   "id": 6,
+   "path": "/Users/you/Downloads/1099-INT bank.pdf",
+   "name": "1099-INT bank.pdf",
+   "folder": "/Users/you/Desktop/Taxes 2026",
+   "folder_name": "Taxes 2026",
+   "confidence": 0.92,
+   "by": "tabpfn",
+   "new_name": null,
+   "action": "move"
+  },
+  {
+   "id": 7,
+   "path": "/Users/you/Downloads/attention_is_all_you_need.pdf",
+   "name": "attention_is_all_you_need.pdf",
+   "folder": "/Users/you/Desktop/Thesis",
+   "folder_name": "Thesis",
+   "confidence": 0.96,
+   "by": "tabpfn",
+   "new_name": null,
+   "action": "move"
+  },
+  {
+   "id": 8,
+   "path": "/Users/you/Downloads/2410.05229v2.pdf",
+   "name": "2410.05229v2.pdf",
+   "folder": "/Users/you/Desktop/Thesis",
+   "folder_name": "Thesis",
+   "confidence": 0.58,
+   "by": "gemma",
+   "new_name": "tabular foundation models survey.pdf",
+   "action": "move+rename"
+  },
+  {
+   "id": 9,
+   "path": "/Users/you/Desktop/thesis_figures_v3.png",
+   "name": "thesis_figures_v3.png",
+   "folder": "/Users/you/Desktop/Thesis",
+   "folder_name": "Thesis",
+   "confidence": 0.88,
+   "by": "tabpfn",
+   "new_name": null,
+   "action": "move"
+  },
+  {
+   "id": 10,
+   "path": "/Users/you/Downloads/lease_signed.pdf",
+   "name": "lease_signed.pdf",
+   "folder": "/Users/you/Desktop/Apartment",
+   "folder_name": "Apartment",
+   "confidence": 0.95,
+   "by": "tabpfn",
+   "new_name": null,
+   "action": "move"
+  },
+  {
+   "id": 11,
+   "path": "/Users/you/Downloads/Screenshot 2026-10-19 at 09.12.44.png",
+   "name": "Screenshot 2026-10-19 at 09.12.44.png",
+   "folder": "/Users/you/Desktop/Apartment",
+   "folder_name": "Apartment",
+   "confidence": 0.81,
+   "by": "tabpfn",
+   "new_name": "landlord reply about heating.png",
+   "action": "move+rename"
+  },
+  {
+   "id": 12,
+   "path": "/Users/you/Downloads/shakshuka.pdf",
+   "name": "shakshuka.pdf",
+   "folder": "/Users/you/Desktop/Recipes",
+   "folder_name": "Recipes",
+   "confidence": 0.93,
+   "by": "tabpfn",
+   "new_name": null,
+   "action": "move"
+  },
+  {
+   "id": 13,
+   "path": "/Users/you/Downloads/The Overstory.epub",
+   "name": "The Overstory.epub",
+   "folder": "/Users/you/Desktop/Books",
+   "folder_name": "Books",
+   "confidence": 0.44,
+   "by": "new_folder",
+   "new_name": null,
+   "action": "move"
+  },
+  {
+   "id": 14,
+   "path": "/Users/you/Downloads/Project Hail Mary.epub",
+   "name": "Project Hail Mary.epub",
+   "folder": "/Users/you/Desktop/Books",
+   "folder_name": "Books",
+   "confidence": 0.41,
+   "by": "new_folder",
+   "new_name": null,
+   "action": "move"
+  },
+  {
+   "id": 15,
+   "path": "/Users/you/Downloads/Dune Messiah.epub",
+   "name": "Dune Messiah.epub",
+   "folder": "/Users/you/Desktop/Books",
+   "folder_name": "Books",
+   "confidence": 0.38,
+   "by": "new_folder",
+   "new_name": null,
+   "action": "move"
+  },
+  {
+   "id": 16,
+   "path": "/Users/you/Desktop/Screenshot 2026-10-20 at 18.40.02.png",
+   "name": "Screenshot 2026-10-20 at 18.40.02.png",
+   "folder": null,
+   "folder_name": null,
+   "confidence": 0.52,
+   "by": null,
+   "new_name": "train times to porto.png",
+   "action": "rename"
+  },
+  {
+   "id": 17,
+   "path": "/Users/you/Desktop/Untitled.txt",
+   "name": "Untitled.txt",
+   "folder": null,
+   "folder_name": null,
+   "confidence": 0.47,
+   "by": null,
+   "new_name": null,
+   "action": "leave"
+  },
+  {
+   "id": 18,
+   "path": "/Users/you/Downloads/a3f9c2e1-77b0-4c1e-9d55-0e2b4f8a1c3d.zip",
+   "name": "a3f9c2e1-77b0-4c1e-9d55-0e2b4f8a1c3d.zip",
+   "folder": null,
+   "folder_name": null,
+   "confidence": 0.35,
+   "by": null,
+   "new_name": null,
+   "action": "leave"
+  }
+ ],
+ "skipped": [
+  {
+   "path": "/Users/you/Desktop/aws-prod.pem",
+   "name": "aws-prod.pem",
+   "why": "looks like a key or secret, never touched"
+  },
+  {
+   "path": "/Users/you/Downloads/wallet-recovery-words.txt",
+   "name": "wallet-recovery-words.txt",
+   "why": "looks like a key or secret, never touched"
+  },
+  {
+   "path": "/Users/you/Downloads/meeting-notes.md",
+   "name": "meeting-notes.md",
+   "why": "changed in the last 10 minutes, maybe still in use"
+  }
+ ],
+ "summary": {
+  "files": 19,
+  "moves": 16,
+  "renames": 7,
+  "left": 2,
+  "minutes_saved": 5.7,
+  "seconds": 214
+ }
+}
