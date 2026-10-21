@@ -5,6 +5,7 @@ Every applied change is written to a journal *before* it happens, so a crash mid
 import json
 import os
 import time
+import uuid
 from pathlib import Path
 
 from . import rename as gemma
@@ -38,17 +39,18 @@ def build(todo, skipped, model, meta, use_gemma=True, threshold=THRESHOLD, progr
     folder_names = {Path(c).name: c for c in (model.classes if model else [])}
     items = []
     for i, (path, (folder, conf)) in enumerate(zip(todo, predictions)):
-        p, item = Path(path), {"id": i, "path": path, "name": Path(path).name, "folder": None, "folder_name": None,
-                               "confidence": round(conf, 3), "by": None, "new_name": None}
+        p, st = Path(path), os.stat(path)
+        item = {"id": i, "path": path, "name": p.name, "folder": None, "folder_name": None, "confidence": round(conf, 3),
+                "by": None, "new_name": None, "size": st.st_size, "mtime": st.st_mtime}
         if folder and conf >= threshold:
             item.update(folder=folder, folder_name=Path(folder).name, by="tabpfn")
         elif use_gemma and folder_names and p.suffix.lower() in gemma.DOC_EXT:
-            progress(f"asking Gemma where {p.suffix} file {i + 1} goes")
+            progress(f"Gemma is reading file {i + 1} of {len(todo)}…")
             picked = _safe(gemma.route, path, list(folder_names))
             if picked:
                 item.update(folder=folder_names[picked], folder_name=picked, by="gemma")
         if use_gemma and gemma.is_generic(path):
-            progress(f"asking Gemma to name file {i + 1}")
+            progress(f"Gemma is naming file {i + 1} of {len(todo)}…")
             name = _safe(gemma.suggest_name, path)
             if name:
                 item["new_name"] = name + p.suffix.lower()
@@ -56,12 +58,45 @@ def build(todo, skipped, model, meta, use_gemma=True, threshold=THRESHOLD, progr
                           else "rename" if item["new_name"] else "leave")
         items.append(item)
     suggest_new_folders(items, new_folder_root)
+    return {"created": time.strftime("%Y-%m-%d %H:%M"), "built": time.time(), "token": uuid.uuid4().hex,
+            "items": items, "skipped": [{"path": p, "name": Path(p).name, "why": why} for p, why in skipped],
+            "summary": summarize(items)}
+
+
+def summarize(items):
     handled = sum(i["action"] != "leave" for i in items)
-    return {"created": time.strftime("%Y-%m-%d %H:%M"), "items": items,
-            "skipped": [{"path": p, "name": Path(p).name, "why": why} for p, why in skipped],
-            "summary": {"files": len(items), "moves": sum("move" in i["action"] for i in items),
-                        "renames": sum("rename" in i["action"] for i in items), "left": len(items) - handled,
-                        "minutes_saved": round(handled * SECONDS_SAVED / 60, 1)}}
+    return {"files": len(items), "moves": sum("move" in i["action"] for i in items),
+            "renames": sum("rename" in i["action"] for i in items), "left": len(items) - handled,
+            "minutes_saved": round(handled * SECONDS_SAVED / 60, 1)}
+
+
+def save(plan, path):
+    """Atomic: a crash mid-write never leaves half a plan behind."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(".tmp")
+    tmp.write_text(json.dumps(plan, indent=1))
+    os.replace(tmp, path)
+
+
+def load_fresh(path, max_age=None):
+    """The saved plan, minus files that moved or changed since it was built. None if missing, too old or applied."""
+    path = Path(path)
+    if not path.exists():
+        return None
+    plan = json.loads(path.read_text())
+    if plan.get("applied") or (max_age and time.time() - plan.get("built", 0) > max_age):
+        return None
+
+    def unchanged(item):
+        try:
+            st = os.stat(item["path"])
+        except OSError:
+            return False
+        return st.st_size == item.get("size") and st.st_mtime == item.get("mtime")
+    plan["items"] = [i for i in plan["items"] if unchanged(i)]
+    plan["summary"].update(summarize(plan["items"]))
+    return plan
 
 
 def suggest_new_folders(items, root):
@@ -88,10 +123,11 @@ def _safe(fn, *args):
         return None
 
 
-def apply(plan, ids=None, journal_dir=JOURNALS):
-    """Carry out the chosen items. Returns the journal path (needed for undo)."""
+def apply(plan, ids=None, journal_dir=None):
+    """Carry out the chosen items. Returns the journal path (needed for undo), or None if nothing moved."""
+    journal_dir = Path(journal_dir or JOURNALS)
     journal_dir.mkdir(parents=True, exist_ok=True)
-    journal = journal_dir / f"journal-{time.strftime('%Y%m%d-%H%M%S')}.json"
+    journal = journal_dir / f"journal-{time.strftime('%Y%m%d-%H%M%S')}-{time.time_ns() % 10**9:09d}.json"
     done = []
     for item in plan["items"]:
         if item["action"] == "leave" or (ids is not None and item["id"] not in ids):
@@ -101,10 +137,12 @@ def apply(plan, ids=None, journal_dir=JOURNALS):
             continue
         folder = Path(item["folder"]) if item["folder"] else src.parent
         dest = free_path(folder / (item["new_name"] or src.name))
-        done.append({"from": str(src), "to": str(dest)})
+        done.append({"id": item["id"], "from": str(src), "to": str(dest)})
         journal.write_text(json.dumps(done, indent=1))  # written before the move: undo works even after a crash
         folder.mkdir(parents=True, exist_ok=True)
         os.rename(src, dest)
+    if not done:
+        return None
     journal.write_text(json.dumps(done, indent=1))
     return journal
 
@@ -122,9 +160,10 @@ def undo(journal):
             back.parent.mkdir(parents=True, exist_ok=True)
             os.rename(src, back)
             restored += 1
+    Path(journal).rename(Path(journal).with_name("undone-" + Path(journal).name))  # so a second undo can't replay it
     return restored, problems
 
 
-def latest_journal(journal_dir=JOURNALS):
-    journals = sorted(journal_dir.glob("journal-*.json"))
+def latest_journal(journal_dir=None):
+    journals = sorted(Path(journal_dir or JOURNALS).glob("journal-*.json"))
     return journals[-1] if journals else None

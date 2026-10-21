@@ -6,4 +6,38 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
-      - run: uv run pytest -q -m "not slow"
+      - run: uv run pytest -q
+      - name: wheel ships the review screen, not the post images
+        run: |
+          uv build --wheel
+          unzip -l dist/*.whl | grep -q tidy_sloth/web/index.html
+          ! unzip -l dist/*.whl | grep -q tidy_sloth/web/post/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheel
+          path: dist/*.whl
+
+  lint-installer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: shellcheck install.sh && sh -n install.sh
+
+  install:
+    # A clean Mac: the installer fetches uv itself, installs this commit's wheel and makes the app.
+    needs: test
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheel
+          path: dist
+      - run: SLOTH_SKIP_MODELS=1 SLOTH_SOURCE="$PWD/dist/tidy_sloth-0.1.0-py3-none-any.whl" sh install.sh
+      - name: the app exists, is signed, and the command works
+        run: |
+          test -f "$HOME/Applications/Tidy Sloth.app/Contents/Resources/applet.icns"
+          codesign --verify --deep "$HOME/Applications/Tidy Sloth.app"
+          "$HOME/.local/bin/tidy-sloth" --help
+          "$HOME/.local/bin/tidy-sloth" --uninstall
+          test ! -e "$HOME/Applications/Tidy Sloth.app"

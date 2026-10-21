@@ -84,24 +84,96 @@ def test_leftovers_of_one_kind_get_a_new_folder(tmp_path):
     assert items[3]["action"] == "leave"  # one video isn't a pattern
 
 
-def test_server_refuses_other_hosts_and_origins():
-    import threading, urllib.request, urllib.error
-    from http.server import ThreadingHTTPServer
-    from tidy_sloth import server
-    server.Handler.state["plan"] = {"items": [], "skipped": [], "summary": {}}
-    httpd = ThreadingHTTPServer(("127.0.0.1", 0), server.Handler)
-    threading.Thread(target=httpd.serve_forever, daemon=True).start()
-    url, port = f"http://127.0.0.1:{httpd.server_port}/api/plan", httpd.server_port
+class _Server:
+    """A real review server on a free port, for poking at it like the page (or an attacker) would."""
 
-    def status(headers, method="GET"):
-        req = urllib.request.Request(url, headers=headers, method=method, data=b"{}" if method == "POST" else None)
+    def __init__(self, state):
+        import threading
+        from http.server import ThreadingHTTPServer
+        from tidy_sloth import server
+        server.Handler.state.update({"plan": None, "step": "", "error": None, "building": False, "journal": None, **state})
+        self.httpd = ThreadingHTTPServer(("127.0.0.1", 0), server.Handler)
+        self.port = self.httpd.server_port
+        threading.Thread(target=self.httpd.serve_forever, daemon=True).start()
+
+    def call(self, path, body=None, headers=None):
+        import json, urllib.request, urllib.error
+        req = urllib.request.Request(f"http://127.0.0.1:{self.port}{path}", headers=headers or {},
+                                     data=None if body is None else json.dumps(body).encode())
         try:
-            return urllib.request.urlopen(req).status
+            with urllib.request.urlopen(req) as r:
+                return r.status, json.load(r)
         except urllib.error.HTTPError as e:
-            return e.code
-    try:
-        assert status({}) == 200
-        assert status({"Host": f"evil.example:{port}"}) == 403  # DNS rebinding
-        assert status({"Origin": "https://evil.example"}, "POST") == 403
-    finally:
-        httpd.shutdown()
+            return e.code, json.load(e)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.httpd.shutdown()
+        self.httpd.server_close()
+
+
+def test_server_refuses_other_hosts_and_origins():
+    with _Server({"plan": {"items": [], "skipped": [], "summary": {}}}) as srv:
+        assert srv.call("/api/plan")[0] == 200
+        assert srv.call("/api/plan", headers={"Host": f"evil.example:{srv.port}"})[0] == 403  # DNS rebinding
+        assert srv.call("/api/apply", {}, headers={"Origin": "https://evil.example"})[0] == 403
+
+
+def test_server_while_building_and_with_a_stale_page(tmp_path, monkeypatch):
+    with _Server({"building": True, "step": "Learning…"}) as srv:
+        assert srv.call("/api/plan") == (200, {"building": True, "step": "Learning…"})
+        assert srv.call("/api/apply", {"token": "x", "items": []})[0] == 409  # nothing to apply yet
+    (tmp_path / "a.pdf").write_text("a")
+    monkeypatch.setattr(plan, "JOURNALS", tmp_path / "journals")
+    the_plan = {"token": "t1", "items": [{"id": 0, "path": str(tmp_path / "a.pdf"), "folder": str(tmp_path / "Taxes"),
+                                          "new_name": None, "action": "move"}], "skipped": [], "summary": {}}
+    with _Server({"plan": the_plan}) as srv:
+        assert srv.call("/api/apply", {"token": "old", "items": [{"id": 0}]})[0] == 409  # page from another plan
+        assert srv.call("/api/apply", {"token": "t1", "items": [{"id": 0}]})[1]["moved"] == [0]
+        assert srv.call("/api/apply", {"token": "t1", "items": [{"id": 0}]})[0] == 409  # double click
+        assert (tmp_path / "Taxes" / "a.pdf").exists()
+
+
+def test_repeat_apply_keeps_the_undo(tmp_path):
+    (tmp_path / "a.pdf").write_text("a")
+    (tmp_path / "b.pdf").write_text("b")
+    item = lambda i, n: {"id": i, "path": str(tmp_path / n), "folder": str(tmp_path / "Taxes"), "new_name": None, "action": "move"}
+    first = plan.apply({"items": [item(0, "a.pdf")]}, journal_dir=tmp_path / "j")
+    assert plan.apply({"items": [item(0, "a.pdf")]}, journal_dir=tmp_path / "j") is None  # nothing left to move
+    second = plan.apply({"items": [item(1, "b.pdf")]}, journal_dir=tmp_path / "j")
+    assert first != second and first.exists() and second.exists()  # same second, two journals
+
+
+def test_saved_plan_drops_files_that_changed(tmp_path):
+    for n in ["kept.pdf", "edited.pdf", "gone.pdf"]:
+        (tmp_path / n).write_text(n)
+    items = []
+    for i, n in enumerate(["kept.pdf", "edited.pdf", "gone.pdf"]):
+        st = os.stat(tmp_path / n)
+        items.append({"id": i, "path": str(tmp_path / n), "action": "move", "size": st.st_size, "mtime": st.st_mtime})
+    plan.save({"built": time.time(), "items": items, "skipped": [], "summary": {}}, tmp_path / "plan.json")
+    (tmp_path / "edited.pdf").write_text("edited, now longer")
+    (tmp_path / "gone.pdf").unlink()
+    fresh = plan.load_fresh(tmp_path / "plan.json", max_age=3600)
+    assert [i["path"] for i in fresh["items"]] == [str(tmp_path / "kept.pdf")] and fresh["summary"]["moves"] == 1
+    plan.save({**fresh, "applied": "journal.json"}, tmp_path / "plan.json")
+    assert plan.load_fresh(tmp_path / "plan.json") is None  # already applied: look again instead
+
+
+def test_mac_app_is_ours_signed_and_never_replaces_someone_elses(tmp_path):
+    import plistlib, subprocess, pytest
+    from tidy_sloth import install
+    app = install.make_app("/opt/tidy sloth/bin/tidy-sloth", app=tmp_path / "Tidy Sloth.app")
+    info = plistlib.loads((app / "Contents" / "Info.plist").read_bytes())
+    assert info["CFBundleIdentifier"] == install.BUNDLE_ID and "CFBundleIconName" not in info
+    assert (app / "Contents" / "Resources" / "applet.icns").read_bytes() == install.ICON.read_bytes()
+    assert subprocess.run(["codesign", "--verify", "--deep", str(app)]).returncode == 0
+    install.make_app("/opt/tidy sloth/bin/tidy-sloth", app=app)  # reinstalling over our own app is fine
+    other = tmp_path / "Other.app" / "Contents"
+    other.mkdir(parents=True)
+    (other / "Info.plist").write_bytes(plistlib.dumps({"CFBundleIdentifier": "com.example.other"}))
+    with pytest.raises(SystemExit):
+        install.make_app("/x", app=other.parent)
+    assert (other / "Info.plist").exists()

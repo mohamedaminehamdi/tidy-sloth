@@ -78,6 +78,21 @@ def filing_folders(roots=FILING_ROOTS, skip=()):
     return found
 
 
+def check_access(roots=(*TIDY_ROOTS, *FILING_ROOTS)):
+    """macOS asks the first time an app looks in Desktop, Documents or Downloads. A 'no' must not become an empty plan."""
+    denied = []
+    for root in dict.fromkeys(roots):
+        try:
+            os.listdir(root)
+        except FileNotFoundError:
+            pass
+        except PermissionError:
+            denied.append(root.name)
+    if denied:
+        raise PermissionError(f"macOS hasn't let Tidy Sloth look in {' and '.join(denied)}. Allow it in System Settings → "
+                              "Privacy & Security → Files & Folders, then open Tidy Sloth again.")
+
+
 def loose_files(roots=TIDY_ROOTS, now=None):
     """Top-level files to tidy, plus the ones we deliberately leave alone (with the reason)."""
     now, todo, skipped = now or time.time(), [], []

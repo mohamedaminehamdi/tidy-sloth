@@ -1865,7 +1865,7 @@ requires-dist = [
     { name = "pypdf", specifier = ">=6.21.1" },
     { name = "requests", specifier = ">=2.34.2" },
     { name = "scikit-learn", specifier = ">=1.9.1" },
-    { name = "tabpfn", specifier = ">=9.2.0" },
+    { name = "tabpfn", specifier = ">=9.2.0,<9.3" },
 ]
 
 [package.metadata.requires-dev]

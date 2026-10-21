@@ -2,7 +2,6 @@ name: pages
 on:
   push:
     branches: [main]
-    paths: [web/**, .github/workflows/pages.yml]
   workflow_dispatch:
 permissions:
   contents: read
@@ -17,9 +16,13 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      # The site is the demo, the installer, and the wheel the installer installs (no git needed on the user's Mac).
+      - run: uv build --wheel
+      - run: mkdir _site && cp -R tidy_sloth/web/. _site/ && cp install.sh dist/tidy_sloth-0.1.0-py3-none-any.whl _site/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: web
+          path: _site
       - id: deployment
         uses: actions/deploy-pages@v4
