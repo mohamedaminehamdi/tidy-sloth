@@ -4,37 +4,29 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Tidy Sloth puts your Downloads and Desktop away by learning how you already file things. Runs on your Mac, never deletes.">
-<meta name="theme-color" content="#0b130e" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#eef3e6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#fbf3e8">
 <title>Tidy Sloth</title>
 <link rel="icon" href="sloth.svg" type="image/svg+xml">
 <style>
   @font-face { font-family: "Fraunces"; src: url(fonts/fraunces-latin.woff2) format("woff2"); font-weight: 500 800; font-display: swap; }
   :root {
-    color-scheme: dark light;
-    --bg: #0b130e; --ink: #edf2e4; --muted: #98a892; --line: rgba(237, 242, 228, .09); --panel: rgba(237, 242, 228, .035);
-    --moss: #a6d86e; --moss-ink: #0f1a0b; --moss-soft: rgba(166, 216, 110, .13); --amber: #f0b35e; --sheet: #142019;
-    --stage: radial-gradient(90% 70% at 18% 0%, #27452f 0%, #152a1c 45%, #0d1912 100%);
-    --glow: radial-gradient(40% 45% at 86% 12%, rgba(240, 179, 94, .2), transparent 70%);
-    --leaf: #1d3a26; --leaf-2: #234630; --tray: rgba(237, 242, 228, .05); --paper: #f7f2e6; --paper-ink: #2a2a22;
+    color-scheme: light;
+    --bg: #fbf3e8; --ink: #2b1d2f; --muted: #7d6a72; --line: rgba(43, 29, 47, .1); --panel: #fffaf4; --sheet: #fffaf4;
+    --accent: #ff7a50; --accent-ink: #2b1d2f; --accent-soft: rgba(255, 122, 80, .14); --accent-text: #c2410c;
+    --gemma: #8a4b9a; --gemma-soft: rgba(138, 75, 154, .12); --sun: #fff1c9;
+    --stage: linear-gradient(180deg, #ffe3b8 0%, #ffc8a2 36%, #f6a48f 64%, #c99bcc 100%);
+    --glow: radial-gradient(26% 38% at 80% 20%, rgba(255, 246, 220, .95), rgba(255, 214, 150, .45) 45%, transparent 72%);
+    --leaf: rgba(110, 52, 84, .26); --leaf-2: rgba(110, 52, 84, .16); --tray: rgba(255, 250, 244, .45);
+    --paper: #fffdf8; --paper-ink: #2b1d2f; --term: #2b1d2f; --term-ink: #fbe9dc;
     --serif: "Fraunces", ui-serif, Georgia, serif;
     --round: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --ease: cubic-bezier(.45, 0, .25, 1);
-  }
-  @media (prefers-color-scheme: light) {
-    :root:not([data-theme="dark"]) {
-      --bg: #eef3e6; --ink: #1c2618; --muted: #5d6956; --line: rgba(28, 38, 24, .1); --panel: rgba(255, 255, 255, .6);
-      --moss: #3f7a2c; --moss-ink: #fff; --moss-soft: rgba(63, 122, 44, .1); --amber: #b86e14; --sheet: #fbfcf7;
-      --stage: radial-gradient(90% 70% at 18% 0%, #f4f9ea 0%, #dcebc9 50%, #c5dcae 100%);
-      --glow: radial-gradient(40% 45% at 86% 12%, rgba(255, 214, 140, .55), transparent 70%);
-      --leaf: #a9c98f; --leaf-2: #98bd7c; --tray: rgba(255, 255, 255, .35);
-    }
   }
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
   body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 var(--round); -webkit-font-smoothing: antialiased; }
   button, input { font: inherit; color: inherit; }
-  :focus-visible { outline: 3px solid var(--moss); outline-offset: 3px; border-radius: 12px; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 12px; }
   [hidden] { display: none !important; }
   .wrap { max-width: 1080px; margin: 0 auto; padding: 18px 16px 64px; }
 
@@ -44,7 +36,7 @@
   .brand { white-space: nowrap; font: 700 21px/1 var(--serif); letter-spacing: -.02em; font-variation-settings: "SOFT" 100; }
   .pill { font-size: 12.5px; font-weight: 650; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 4px 11px; white-space: nowrap; }
   .install-btn { margin-left: auto; display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 999px; padding: 9px 16px;
-    background: var(--paper); color: var(--paper-ink); font-weight: 750; font-size: 14.5px; cursor: pointer; white-space: nowrap;
+    background: var(--ink); color: var(--bg); font-weight: 750; font-size: 14.5px; cursor: pointer; white-space: nowrap;
     transition: transform .16s var(--ease); }
   .install-btn:active { transform: scale(.97); }
   .install-btn svg { width: 16px; height: 16px; }
@@ -56,19 +48,19 @@
     background: var(--glow), var(--stage); border: 1px solid var(--line); }
   .leaves { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; }
   .leaves .a { fill: var(--leaf); } .leaves .b { fill: var(--leaf-2); }
-  .mote { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: var(--amber); opacity: 0; filter: blur(.4px);
+  .mote { position: absolute; width: 5px; height: 5px; border-radius: 50%; background: var(--sun); opacity: 0; filter: blur(.4px);
     animation: mote 9s ease-in-out infinite; }
   @keyframes mote { 0%, 100% { opacity: 0; transform: translate(0, 0); } 40% { opacity: .7; } 70% { opacity: .2; transform: translate(18px, -26px); } }
   .branch { position: absolute; top: 30px; left: -3%; width: 106%; height: 15px; border-radius: 999px; transform: rotate(-.8deg);
-    background: linear-gradient(#83603f, #5a3e29); box-shadow: 0 3px 0 rgba(0, 0, 0, .18); }
-  .branch i { position: absolute; top: -9px; width: 26px; height: 13px; border-radius: 0 100% 0 100%; background: #5f9a47; transform: rotate(-24deg); }
-  .branch i:nth-child(2n) { top: 9px; transform: rotate(150deg); background: #4f8a3b; }
+    background: linear-gradient(#7a4c3c, #4f2f28); box-shadow: 0 3px 0 rgba(79, 47, 40, .25); }
+  .branch i { position: absolute; top: -9px; width: 26px; height: 13px; border-radius: 0 100% 0 100%; background: #9a4f6c; transform: rotate(-24deg); }
+  .branch i:nth-child(2n) { top: 9px; transform: rotate(150deg); background: #7d3f5c; }
 
   .sloth { position: absolute; top: 34px; left: 0; width: 110px; z-index: 3; will-change: transform; }
   .sway { transform-origin: 55px 0; }
   .idle { transform-origin: 55px 0; animation: idle 6s ease-in-out infinite; }
   @keyframes idle { 0%, 100% { transform: rotate(-1.6deg); } 50% { transform: rotate(1.6deg); } }
-  .vine { position: absolute; left: 53px; top: 0; width: 4px; height: 28px; border-radius: 4px; background: linear-gradient(90deg, #4c7c36, #6aa84d); }
+  .vine { position: absolute; left: 53px; top: 0; width: 4px; height: 28px; border-radius: 4px; background: linear-gradient(90deg, #6a4334, #8f5f47); }
   .rig { position: absolute; top: 28px; left: 0; width: 110px; }
   .rig .art { display: block; width: 110px; height: 128px; }
   .hold { position: absolute; left: -30px; right: -30px; top: 104px; display: flex; justify-content: center; z-index: 1; }
@@ -79,17 +71,17 @@
   .think::before { width: 10px; height: 10px; left: -9px; top: 30px; } .think::after { width: 6px; height: 6px; left: -17px; top: 40px; }
   .think.left { left: auto; right: 100px; transform-origin: 100% 70%; }
   .think.left::before { left: auto; right: -9px; } .think.left::after { left: auto; right: -17px; }
-  .think small { display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: #6f7a5f; }
+  .think small { display: block; font-size: 10.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: #a07f88; }
   .think b { display: block; font-size: 13.5px; font-weight: 750; line-height: 1.25; }
   .card { position: relative; overflow: hidden; }
-  .card .scan { position: absolute; left: 0; right: 0; top: 0; height: 3px; background: #7ccf4f; box-shadow: 0 0 12px 3px rgba(124, 207, 79, .7); }
-  .card.typing .n::after { content: "▍"; color: #3f7a2c; animation: blink .7s steps(1) infinite; }
+  .card .scan { position: absolute; left: 0; right: 0; top: 0; height: 3px; background: #ff7a50; box-shadow: 0 0 12px 3px rgba(255, 122, 80, .65); }
+  .card.typing .n::after { content: "▍"; color: var(--accent-text); animation: blink .7s steps(1) infinite; }
   @keyframes blink { 50% { opacity: 0; } }
 
   .ground { position: absolute; left: 22px; right: 22px; top: 196px; bottom: 20px; display: grid; grid-template-columns: 1.15fr 1fr; grid-template-rows: minmax(0, 1fr); gap: 26px; align-items: end; }
   .tray { position: relative; height: 100%; min-height: 0; overflow: hidden; display: flex; flex-wrap: wrap; align-content: flex-end; gap: 8px 7px; padding: 34px 14px 14px;
-    border-radius: 20px; background: var(--tray); border: 1px dashed var(--line); }
-  .tray-label { position: absolute; top: 10px; left: 14px; font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: .02em; }
+    border-radius: 20px; background: var(--tray); border: 1.5px dashed rgba(255, 255, 255, .75); }
+  .tray-label { position: absolute; top: 10px; left: 14px; font-size: 12px; font-weight: 750; color: #8a5a5f; letter-spacing: .02em; }
   .more { align-self: center; font-size: 12px; font-weight: 700; color: var(--muted); padding: 4px 8px; }
 
   .card { --r: 0deg; display: flex; align-items: center; gap: 7px; max-width: 172px; padding: 6px 10px 6px 6px; border-radius: 10px;
@@ -107,7 +99,7 @@
   .basket { position: relative; height: 112px; display: flex; flex-direction: column; justify-content: flex-end; transform-origin: 50% 100%; }
   .basket .tag { position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 750; }
   .basket .tag span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-  .basket .new { flex: none; font-style: normal; font-size: 10px; font-weight: 800; color: var(--moss-ink); background: var(--moss); border-radius: 999px; padding: 1px 7px; }
+  .basket .new { flex: none; font-style: normal; font-size: 10px; font-weight: 800; color: var(--accent-ink); background: var(--accent); border-radius: 999px; padding: 1px 7px; }
   .mouth { height: 16px; margin: 0 4px -8px; border-radius: 50%; background: #3b2a1c; box-shadow: inset 0 3px 6px rgba(0, 0, 0, .5); }
   .weave { position: relative; height: 66px; border-radius: 6px 6px 18px 18px; clip-path: polygon(0 0, 100% 0, 93% 100%, 7% 100%);
     background: repeating-linear-gradient(90deg, rgba(0, 0, 0, .12) 0 2px, transparent 2px 13px),
@@ -120,8 +112,8 @@
   h1 { font: 650 clamp(30px, 4.6vw, 48px)/1.06 var(--serif); letter-spacing: -.025em; margin: 0 0 8px; font-variation-settings: "SOFT" 100, "opsz" 72; }
   .lede { margin: 0; color: var(--muted); font-size: 18px; max-width: 34em; }
   .act { display: flex; flex-direction: column; align-items: stretch; gap: 10px; width: 300px; }
-  .payoff { text-align: center; padding: 6px 12px; border-radius: 999px; background: var(--moss-soft); color: var(--moss); font-weight: 750; font-size: 14px; }
-  .approve { min-height: 58px; border: 0; border-radius: 18px; background: var(--moss); color: var(--moss-ink); font-size: 18.5px; font-weight: 800;
+  .payoff { text-align: center; padding: 6px 12px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); font-weight: 750; font-size: 14px; }
+  .approve { min-height: 58px; border: 0; border-radius: 18px; background: var(--accent); color: var(--accent-ink); font-size: 18.5px; font-weight: 800;
     cursor: pointer; transition: transform .16s var(--ease), opacity .2s; }
   .approve:active { transform: scale(.97); } .approve:disabled { opacity: .45; cursor: default; }
   .link { background: none; border: 0; color: var(--muted); cursor: pointer; text-decoration: underline; text-underline-offset: 3px; font-size: 15px; padding: 4px; }
@@ -132,30 +124,51 @@
   .group h2 { display: flex; align-items: center; gap: 8px; font: 650 17px/1.3 var(--serif); margin: 12px 0 6px; }
   .group h2 small { margin-left: auto; color: var(--muted); font: 650 13px var(--round); }
   .row { display: grid; grid-template-columns: auto 1fr auto; gap: 2px 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
-  .row input[type=checkbox] { width: 19px; height: 19px; accent-color: var(--moss); }
+  .row input[type=checkbox] { width: 19px; height: 19px; accent-color: var(--accent); }
   .file { min-width: 0; }
   .from { font-size: 13.5px; color: var(--muted); overflow-wrap: anywhere; }
   .to { width: 100%; padding: 6px 9px; margin-top: 4px; border: 1px solid var(--line); border-radius: 10px; background: transparent; }
   .name { font-weight: 650; overflow-wrap: anywhere; }
-  .tag-s { font-size: 11.5px; font-weight: 750; padding: 2px 8px; border-radius: 999px; background: var(--moss-soft); color: var(--moss); white-space: nowrap; }
-  .tag-s.warm { color: var(--amber); background: rgba(240, 179, 94, .12); }
+  .tag-s { font-size: 11.5px; font-weight: 750; padding: 2px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); white-space: nowrap; }
+  .tag-s.warm { color: var(--gemma); background: var(--gemma-soft); }
   .why { grid-column: 2 / -1; font-size: 13px; color: var(--muted); }
 
   footer { margin-top: 40px; text-align: center; color: var(--muted); font-size: 13px; }
   footer a { color: inherit; }
 
   /* install sheet */
-  dialog { width: min(480px, calc(100% - 32px)); border: 1px solid var(--line); border-radius: 24px; padding: 24px; background: var(--sheet); color: var(--ink); }
-  dialog::backdrop { background: rgba(5, 10, 7, .55); backdrop-filter: blur(4px); }
-  dialog h2 { font: 650 26px/1.1 var(--serif); margin: 0 0 6px; letter-spacing: -.02em; }
-  dialog p { margin: 0 0 14px; color: var(--muted); }
-  .cmd { display: flex; gap: 8px; align-items: center; background: rgba(0, 0, 0, .28); border: 1px solid var(--line); border-radius: 14px; padding: 8px 8px 8px 12px; }
-  .cmd code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink); }
-  .cmd button { flex: none; border: 0; border-radius: 10px; padding: 7px 12px; background: var(--moss); color: var(--moss-ink); font-weight: 800; cursor: pointer; }
-  ol.steps { margin: 16px 0; padding-left: 22px; } ol.steps li { margin: 4px 0; }
-  .facts { font-size: 13.5px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 12px; }
-  .facts a { color: var(--ink); }
-  .close { position: absolute; top: 14px; right: 14px; border: 0; background: none; font-size: 22px; color: var(--muted); cursor: pointer; line-height: 1; padding: 6px; }
+  dialog { width: min(540px, calc(100% - 24px)); max-height: calc(100% - 24px); border: 0; border-radius: 28px; padding: 26px; background: var(--sheet);
+    color: var(--ink); box-shadow: 0 30px 80px rgba(43, 29, 47, .35); overflow: auto; }
+  dialog[open] { animation: sheet .32s var(--ease); }
+  @keyframes sheet { from { opacity: 0; transform: translateY(14px) scale(.98); } }
+  dialog::backdrop { background: rgba(43, 29, 47, .42); backdrop-filter: blur(5px); }
+  .sheet-head { display: flex; gap: 14px; align-items: center; margin-bottom: 20px; padding-right: 30px; }
+  .sheet-head img { width: 64px; height: 64px; flex: none; }
+  dialog h2 { font: 650 27px/1.1 var(--serif); margin: 0 0 4px; letter-spacing: -.02em; font-variation-settings: "SOFT" 100; }
+  dialog p { margin: 0; color: var(--muted); }
+  ol.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  ol.steps li > div { min-width: 0; }
+  ol.steps li { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px; align-items: start; padding: 12px 14px; border-radius: 18px; background: #fff; border: 1px solid var(--line); }
+  ol.steps b { display: block; margin-bottom: 4px; }
+  .num { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 14px;
+    background: var(--accent); color: var(--accent-ink); }
+  .copied .num.first { background: #2f9e6b; color: #fff; font-size: 0; }
+  .copied .num.first::after { content: "✓"; font-size: 15px; }
+  .cmd { display: flex; gap: 8px; align-items: center; margin-top: 2px; background: var(--term); border-radius: 13px; padding: 7px 7px 7px 12px; }
+  .cmd code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--term-ink); scrollbar-width: none; }
+  .cmd code::before { content: "$ "; color: var(--accent); }
+  .cmd button { flex: none; border: 0; border-radius: 9px; padding: 7px 13px; background: var(--accent); color: var(--accent-ink); font-weight: 800; font-size: 13.5px; cursor: pointer; }
+  .keys { color: var(--muted); font-size: 14.5px; }
+  kbd { display: inline-block; min-width: 26px; padding: 1px 7px; margin: 0 2px; text-align: center; font: 700 12.5px/1.6 var(--round); color: var(--ink);
+    background: var(--bg); border: 1px solid rgba(43, 29, 47, .16); border-bottom-width: 2.5px; border-radius: 7px; }
+  .gets { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 16px 0 12px; }
+  .gets div { padding: 10px 12px; border-radius: 14px; background: var(--accent-soft); }
+  .gets b { display: block; font-size: 14px; } .gets span { font-size: 12.5px; color: var(--muted); }
+  .fine { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  .fine a { color: var(--ink); font-weight: 650; }
+  .phone { margin-top: 12px !important; padding: 10px 12px; border-radius: 12px; background: var(--gemma-soft); color: var(--gemma) !important; font-weight: 650; font-size: 14px; }
+  .close { position: absolute; top: 16px; right: 16px; width: 34px; height: 34px; border: 0; border-radius: 50%; background: var(--bg); font-size: 20px;
+    color: var(--muted); cursor: pointer; line-height: 1; }
 
   @media (max-width: 720px) {
     .stage { height: 560px; border-radius: 24px; }
@@ -167,6 +180,8 @@
     .basket { height: 96px; } .weave { height: 54px; } .weave b { font-size: 18px; }
     .basket .tag { font-size: 11.5px; } .basket .new { display: none; }
     .panel { grid-template-columns: 1fr; } .act { width: auto; }
+    dialog { padding: 18px; } .gets div { padding: 8px 9px; } .gets b { font-size: 13px; } .gets span { font-size: 11.5px; }
+    .sheet-head img { width: 52px; height: 52px; } dialog h2 { font-size: 23px; }
     .install-btn span.long, .pill .long { display: none; }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -249,19 +264,25 @@
     never deletes · <a href="https://github.com/mohamedaminehamdi/tidy-sloth">source</a></footer>
 </div>
 
-<dialog id="install">
+<dialog id="install" aria-labelledby="install-title">
   <button class="close" id="install-close" type="button" aria-label="Close">×</button>
-  <h2>Install on your Mac</h2>
-  <p>One line sets up everything. You only do this once.</p>
-  <div class="cmd"><code id="cmd">curl -fsSL https://mohamedaminehamdi.github.io/tidy-sloth/install.sh | sh</code><button id="copy" type="button">Copy</button></div>
+  <div class="sheet-head"><img src="icon-256.png" alt="" width="64" height="64">
+    <div><h2 id="install-title">Install Tidy Sloth</h2><p>One line in Terminal, once. After that it's an app on your Mac.</p></div></div>
   <ol class="steps">
-    <li>Open <b>Terminal</b> (⌘ Space, type “Terminal”).</li>
-    <li>Paste (⌘ V) and press Return.</li>
-    <li>Open <b>Tidy Sloth</b> from Applications, any time.</li>
+    <li><span class="num first">1</span><div><b>Copy this line</b>
+      <div class="cmd"><code id="cmd">curl -fsSL https://mohamedaminehamdi.github.io/tidy-sloth/install.sh | sh</code><button id="copy" type="button">Copy</button></div></div></li>
+    <li><span class="num">2</span><div><b>Open Terminal</b><span class="keys"><kbd>⌘</kbd><kbd>Space</kbd>, then type “Terminal”</span></div></li>
+    <li><span class="num">3</span><div><b>Paste it and press Return</b><span class="keys"><kbd>⌘</kbd><kbd>V</kbd> <kbd>Return</kbd>, then open Tidy Sloth from Applications</span></div></li>
   </ol>
-  <div class="facts">About 7 GB, mostly the Gemma 4 model · no admin password · nothing moves until you approve ·
-    Apple silicon, macOS 14+ · <a href="https://github.com/mohamedaminehamdi/tidy-sloth/blob/main/install.sh">read the script</a> ·
-    <a href="https://github.com/mohamedaminehamdi/tidy-sloth#uninstall">uninstall</a></div>
+  <div class="gets">
+    <div><b>Tidy Sloth</b><span>an app in Applications</span></div>
+    <div><b>Gemma 4</b><span>via Ollama · 6.6 GB</span></div>
+    <div><b>TabPFN</b><span>open weights · 70 MB</span></div>
+  </div>
+  <div class="fine"><span>No admin password</span><span>Nothing moves until you approve</span><span>Apple silicon, macOS 14+</span>
+    <a href="https://github.com/mohamedaminehamdi/tidy-sloth/blob/main/install.sh">Read the script</a>
+    <a href="https://github.com/mohamedaminehamdi/tidy-sloth#uninstall">Uninstall</a></div>
+  <p class="phone" id="phone" hidden>On a phone? Open this page on your Mac to install.</p>
 </dialog>
 <script type="module" src="app.js"></script>
 </body>

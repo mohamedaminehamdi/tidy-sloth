@@ -187,13 +187,16 @@ function setupInstall() {
   async function copyCmd() {
     try {
       await navigator.clipboard.writeText(cmd);
-      copy.textContent = 'Copied ✓';
+      copy.textContent = 'Copied';
+      dialog.classList.add('copied');
     } catch {  // no clipboard permission: select it so ⌘C works
       getSelection().selectAllChildren($('cmd'));
       copy.textContent = 'Press ⌘C';
     }
   }
-  $('install-open').addEventListener('click', () => { dialog.showModal(); copyCmd(); });
+  const onMac = /Mac/.test(navigator.platform) && navigator.maxTouchPoints < 2;  // iPads also say "Mac"
+  $('phone').hidden = onMac;
+  $('install-open').addEventListener('click', () => { dialog.showModal(); if (onMac) copyCmd(); });
   copy.addEventListener('click', copyCmd);
   $('install-close').addEventListener('click', () => dialog.close());
   dialog.addEventListener('click', (e) => { if (e.target === dialog) dialog.close(); });
