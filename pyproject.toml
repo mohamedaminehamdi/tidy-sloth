@@ -1,0 +1,20 @@
+[project]
+name = "tidy-sloth"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.12"
+dependencies = [
+    "pypdf>=6.21.1",
+    "requests>=2.34.2",
+    "scikit-learn>=1.9.1",
+    "tabpfn>=9.2.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+markers = ["slow: needs TabPFN weights"]

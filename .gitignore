@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.playwright-cli/
+cache/
+DEV_POST.md
+# real scans of the user's disk never leave the machine
+*.real.json
+.tidy-sloth/
