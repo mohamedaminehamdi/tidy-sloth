@@ -65,7 +65,14 @@ function render() {
     scene.finish(moved);
     return doneState(moved.length);
   }
-  scene.preview();
+  idle();
+}
+
+// Before Approve. The demo shows the sloth doing the whole job; on your Mac nothing goes in a basket until you approve.
+async function idle() {
+  if (LOCAL) return scene.look();
+  moved = chosen().map((i) => i.id);
+  if (await scene.work(moved)) doneState(moved.length);
 }
 
 function chosen() {
@@ -110,7 +117,7 @@ async function approve() {
   $('groups').hidden = true;
   $('payoff').hidden = true;
   say('Putting things away…', 'Slowly. Steadily. Tap the forest to skip.');
-  await Promise.race([scene.sort(moved), sleep(15000)]);
+  await Promise.race([scene.sort(moved, { solo: LOCAL ? 2 : 1 }), sleep(15000)]);
   scene.finish(moved);
   doneState(moved.length);
 }
@@ -131,7 +138,8 @@ async function undo() {
   $('approve').hidden = false;
   $('approve').disabled = false;
   $('show').hidden = false;
-  scene.preview();
+  await sleep(1200);
+  idle();
 }
 
 async function load() {
@@ -148,7 +156,7 @@ async function load() {
     }
     if (data.building) {
       say('Looking at your files…', data.step);
-      scene.search();
+      scene.look();
       await sleep(900);
       continue;
     }
@@ -200,6 +208,6 @@ $('show').addEventListener('click', () => { $('groups').hidden = !$('groups').hi
 $('groups').addEventListener('change', (e) => {
   if (e.target.dataset.pick !== undefined) scene.setOff(Number(e.target.dataset.pick), !e.target.checked);
 });
-$('stage').addEventListener('click', () => { if (scene.sorting) scene.finish(moved); });
+$('stage').addEventListener('click', () => { if (scene.busy) { scene.finish(moved); doneState(moved.length); } });
 if (!LOCAL) setupInstall();
 document.fonts.ready.then(load);

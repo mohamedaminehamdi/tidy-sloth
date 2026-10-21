@@ -1,4 +1,4 @@
-// The stage: a sloth on a vine carries file cards from the pile to their baskets.
+// The stage: a sloth on a vine fetches each file from the pile, reads it, names it, and drops it in its basket.
 // Purely cosmetic. The app never waits on it for state, and every run can be cancelled and snapped to the true end state.
 const TRACK_TOP = 34, VINE = 28, HOLD_TOP = 104, W = 110;   // keep in sync with .sloth/.vine/.rig/.hold in index.html
 const EASE = 'cubic-bezier(.45,0,.25,1)', OUT = 'cubic-bezier(.2,.8,.3,1)', IN = 'cubic-bezier(.55,0,.9,.45)';
@@ -8,6 +8,8 @@ const FAMILY = {
   archive: ['zip', 'dmg', 'tar', 'gz', 'rar', '7z', 'pkg'],
 };
 const COLOR = { image: '#d9774b', video: '#8a63d2', pdf: '#cf4a4a', ebook: '#3f8f7a', text: '#5b7d98', archive: '#9a8653', other: '#7b7b74' };
+const KIND = { image: 'photo', video: 'video', pdf: 'document', ebook: 'ebook', text: 'document', archive: 'archive', other: 'file' };
+const size = (b) => (b > 1e6 ? `${(b / 1e6).toFixed(1)} MB` : `${Math.max(1, Math.round(b / 1e3))} KB`);
 const ext = (name) => (name.match(/\.([^.]+)$/)?.[1] ?? '').toLowerCase();
 const family = (name) => Object.keys(FAMILY).find((f) => FAMILY[f].includes(ext(name))) ?? 'other';
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
@@ -23,7 +25,7 @@ const done = (a) => a.finished.catch(() => {});
 export function createScene(stage) {
   const q = (s) => stage.querySelector(s);
   const sloth = q('#sloth'), sway = q('.sway'), vine = q('.vine'), rig = q('.rig'), hold = q('#hold');
-  const tray = q('#tray'), baskets = q('#baskets'), fly = q('#fly');
+  const tray = q('#tray'), baskets = q('#baskets'), fly = q('#fly'), thought = q('#think');
   let run = 0, mode = null, x = 40, drop = 0;
   let items = new Map(), cards = new Map(), basketOf = new Map(), hiddenBusy = [], hiddenLazy = 0;
   const off = new Set(), inBasket = new Set(), renamed = new Set();
@@ -59,9 +61,44 @@ export function createScene(stage) {
     setTimeout(() => { n.textContent = name; }, 210);
   }
 
+  // ---- the work itself: what the sloth is thinking, reading the file, typing its new name ----
+  function think(label, text) {
+    thought.querySelector('small').textContent = label;
+    thought.querySelector('b').textContent = text;
+    thought.classList.toggle('left', x > stage.clientWidth / 2);
+    if (thought.hidden) {
+      thought.hidden = false;
+      thought.animate([{ opacity: 0, scale: 0.85 }, { opacity: 1, scale: 1 }], { duration: 240, easing: OUT });
+    }
+  }
+  const unthink = () => { thought.hidden = true; };
+  const describe = (i) => `${(ext(i.name) || 'file').toUpperCase()} ${KIND[family(i.name)]}${i.size ? ` · ${size(i.size)}` : ''}`;
+  const verdict = (i) => (i.by === 'tabpfn' ? ['TabPFN', `${Math.round(i.confidence * 100)}% sure → ${i.folder_name}`]
+    : i.by === 'gemma' ? ['Gemma 4 read it', `→ ${i.folder_name}`]
+    : i.by === 'new_folder' ? ['None of your folders fit', `→ a new ${i.folder_name} folder`]
+    : ['Stays where it is', 'it just needs a name']);
+
+  async function analyse(clone, item, f, r) {
+    think('Reading it…', describe(item));
+    const scan = document.createElement('i');
+    scan.className = 'scan';
+    clone.append(scan);
+    await done(scan.animate([{ top: '-15%' }, { top: '110%' }], { duration: 620 * f, iterations: 2, easing: 'ease-in-out' }));
+    scan.remove();
+  }
+
+  async function retype(el, name, f, r) {
+    const n = el.querySelector('.n'), old = n.textContent;
+    el.classList.add('typing');
+    for (let k = old.length; k > 0 && r === run; k -= Math.ceil(old.length / 12)) { n.textContent = old.slice(0, k); await sleep(24 * f); }
+    for (let k = 1; k <= name.length && r === run; k += Math.ceil(name.length / 20)) { n.textContent = name.slice(0, k); await sleep(38 * f); }
+    n.textContent = name;
+    el.classList.remove('typing');
+  }
+
   // ---- the sloth's three moves: along the branch, down the vine, back up ----
   async function travel(tx, f) {
-    tx = Math.max(18, Math.min(stage.clientWidth - W - 18, tx));  // room for the card it carries
+    tx = Math.max(34, Math.min(stage.clientWidth - W - 34, tx));  // room for the card it carries
     const dist = Math.abs(tx - x);
     if (dist < 2) return;
     const ms = Math.max(450, dist / 0.32) * f, dir = Math.sign(tx - x);
@@ -104,27 +141,32 @@ export function createScene(stage) {
     bump(b);
   }
 
-  async function pick(id, f, r, preview) {
-    const el = cards.get(id), b = basketOf.get(id);
+  // one file, start to finish: fetch it, read it, name it, put it away (it stays put away)
+  async function pick(id, f, r) {
+    const el = cards.get(id), b = basketOf.get(id), item = items.get(id);
     if (!el || !b) return;
     const c = rel(el);
     await travel(c.cx - W / 2, f); if (r !== run) return;
     await lower(c.y - holdTop() + 2, f); if (r !== run) return;
     const clone = await grab(el, f); if (r !== run) return;
+    settle(() => { el.hidden = true; });  // the pile closes the gap
     await lower(0, f); if (r !== run) return;
-    if (items.get(id)?.new_name) relabel(clone, items.get(id).new_name);
+    await analyse(clone, item, f, r); if (r !== run) return;
+    if (item.new_name) {
+      think('Gemma 4', 'giving it a real name…');
+      await retype(clone, item.new_name, f, r); if (r !== run) return;
+      renamed.add(id);
+    }
+    think(...verdict(item));
+    await sleep(1100 * f); if (r !== run) return;
     const m = rel(b.querySelector('.mouth'));
     await travel(m.cx - W / 2, f); if (r !== run) return;
     await lower(m.y - clone.offsetHeight - 12 - holdTop(), f); if (r !== run) return;
-    if (!preview) inBasket.add(id);
+    unthink();
+    inBasket.add(id);
     await dropInto(clone, b, f); if (r !== run) return;
-    if (preview) {
-      el.style.visibility = '';
-      el.animate([{ opacity: 0, translate: '0 -10px' }, { opacity: 1, translate: '0 0' }], { duration: 500, easing: OUT });
-    } else {
-      b.filled += 1;
-      count(b);
-    }
+    b.filled += 1;
+    count(b);
     await lower(0, f);
   }
 
@@ -135,6 +177,7 @@ export function createScene(stage) {
     const home = rel(el), m = rel(b.querySelector('.mouth'));
     const clone = el.cloneNode(true);
     clone.classList.remove('zz', 'off');
+    if (!back && items.get(id)?.new_name) clone.querySelector('.n').textContent = items.get(id).new_name;
     Object.assign(clone.style, { left: `${home.x}px`, top: `${home.y}px`, width: `${home.w}px`, visibility: 'visible' });
     fly.append(clone);
     el.style.visibility = 'hidden';
@@ -175,6 +218,7 @@ export function createScene(stage) {
     for (const el of [sloth, sway, vine, rig, fly, hold, baskets, tray]) el.getAnimations({ subtree: true }).forEach((a) => a.cancel());
     fly.replaceChildren();
     hold.replaceChildren();
+    unthink();
     drop = 0;
     sloth.style.translate = `${x}px 0`;
     vine.style.height = `${VINE}px`;
@@ -257,25 +301,38 @@ export function createScene(stage) {
     }
   }
 
-  async function preview() {
+  // the demo: the sloth works through the pile on its own, slowly, file by file
+  async function work(ids) {
     stop();
     const r = run;
-    mode = 'preview';
-    if (reduced.matches) return;
-    await sleep(1600);
-    for (let k = 0; r === run; k++) {
-      const ids = [...cards.keys()].filter((id) => basketOf.has(id) && !off.has(id) && !inBasket.has(id));
-      if (!ids.length) return;
-      await pick(ids[k % ids.length], 1, r, true);
-      await sleep(1800);
+    mode = 'work';
+    const mine = () => ids.filter((id) => !off.has(id));
+    if (reduced.matches || document.hidden) { finish(mine()); return true; }
+    await sleep(1200);
+    let f = 1;
+    for (const id of ids.filter((i) => cards.has(i) && basketOf.has(i))) {
+      if (r !== run) return false;
+      if (off.has(id) || inBasket.has(id)) continue;
+      await pick(id, f, r);
+      f = Math.max(0.6, f * 0.9);
+      await sleep(600 * f);
     }
+    for (const id of ids.filter((i) => cards.has(i) && !basketOf.has(i) && !off.has(i))) {  // renamed, staying put
+      if (r !== run) return false;
+      await retype(cards.get(id), items.get(id).new_name, 1, r);
+      renamed.add(id);
+    }
+    if (r !== run) return false;
+    finish(mine());
+    return true;
   }
 
-  async function search() {
-    if (mode === 'search') return;
+  // waiting for you: the sloth ambles along the branch and peers at the pile
+  async function look() {
+    if (mode === 'look') return;
     stop();
     const r = run;
-    mode = 'search';
+    mode = 'look';
     if (reduced.matches) return;
     while (r === run) {
       await travel(Math.random() * (stage.clientWidth - W), 1.5); if (r !== run) return;
@@ -297,23 +354,26 @@ export function createScene(stage) {
     });
   }
 
-  async function sort(ids) {
+  // Approve: the sloth does the first few files in full, then tosses the rest in
+  async function sort(ids, { solo = 2 } = {}) {
     stop();
     const r = run;
     mode = 'sort';
     if (reduced.matches || document.hidden) return finish(ids);
-    const moves = ids.filter((id) => basketOf.has(id));
-    ids.filter((id) => !basketOf.has(id) && cards.has(id)).forEach((id, k) =>
-      setTimeout(() => { if (r === run) { renamed.add(id); relabel(cards.get(id), items.get(id).new_name); } }, 500 + k * 300));
-    const solo = moves.filter((id) => cards.has(id)).slice(0, 3);
-    let f = 0.5;
-    for (const id of solo) {
-      await pick(id, f, r, false);
+    const todo = ids.filter((id) => basketOf.has(id) && !inBasket.has(id));
+    ids.filter((id) => !basketOf.has(id) && cards.has(id) && !renamed.has(id)).forEach((id) => {
+      renamed.add(id);
+      retype(cards.get(id), items.get(id).new_name, 0.7, r);
+    });
+    const first = todo.filter((id) => cards.has(id)).slice(0, solo);
+    let f = 0.6;
+    for (const id of first) {
+      await pick(id, f, r);
       if (r !== run) return;
-      f = Math.max(0.3, f * 0.78);
+      f *= 0.8;
     }
     sway.animate([{ rotate: '0deg' }, { rotate: '-9deg' }, { rotate: '7deg' }, { rotate: '0deg' }], { duration: 760, easing: 'ease-in-out' });
-    await Promise.all(moves.filter((id) => !solo.includes(id)).map((id, k) => arc(id, k, false)));
+    await Promise.all(todo.filter((id) => !first.includes(id)).map((id, k) => arc(id, k, false)));
     if (r === run) finish(ids);
   }
 
@@ -338,5 +398,5 @@ export function createScene(stage) {
     cards.get(id)?.classList.toggle('off', isOff);
   }
 
-  return { setPlan, preview, search, sort, unsort, finish, stop, setOff, get sorting() { return mode === 'sort'; } };
+  return { setPlan, work, look, sort, unsort, finish, stop, setOff, get busy() { return mode === 'sort' || mode === 'work'; } };
 }
