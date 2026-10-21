@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="sloth">
+  <path d="M8 10 Q60 0 112 10" stroke="#8a6a4f" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path d="M40 9 Q36 34 44 46 M80 9 Q84 34 76 46" stroke="#a5866a" stroke-width="9" fill="none" stroke-linecap="round"/>
+  <ellipse cx="60" cy="74" rx="34" ry="32" fill="#b49073"/>
+  <ellipse cx="60" cy="76" rx="25" ry="22" fill="#efe3d2"/>
+  <ellipse cx="49" cy="72" rx="9" ry="6.5" fill="#6b4f3a" transform="rotate(-18 49 72)"/>
+  <ellipse cx="71" cy="72" rx="9" ry="6.5" fill="#6b4f3a" transform="rotate(18 71 72)"/>
+  <path d="M46 72 q3 2 6 0 M68 72 q3 2 6 0" stroke="#efe3d2" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <ellipse cx="60" cy="81" rx="4.5" ry="3" fill="#4a362a"/>
+  <path d="M54 88 Q60 93 66 88" stroke="#4a362a" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+</svg>

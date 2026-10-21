@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Tidy Sloth puts your Downloads and Desktop away by learning how you already file things. Runs on your Mac, never deletes.">
+<meta name="theme-color" content="#f3f1ea" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#12160f" media="(prefers-color-scheme: dark)">
+<title>Tidy Sloth</title>
+<link rel="icon" href="sloth.svg" type="image/svg+xml">
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #f3f1ea; --card: #fbfaf6; --line: rgba(40, 52, 32, .1); --text: #232b1e; --muted: #67705f;
+    --moss: #4f7c3a; --moss-soft: #e3ecd9; --bark: #8a6a4f; --warn: #a15c1c;
+    --round: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #12160f; --card: #1a2016; --line: rgba(255,255,255,.08); --text: #e8eddf; --muted: #9ba693;
+      --moss: #8fbf6a; --moss-soft: #24301c; --bark: #c9a27f; --warn: #e9a35f; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.55 var(--round); -webkit-font-smoothing: antialiased; }
+  main { max-width: 760px; margin: 0 auto; padding: 28px 16px 120px; }
+  button, input { font: inherit; }
+  :focus-visible { outline: 3px solid var(--moss); outline-offset: 2px; border-radius: 10px; }
+  [hidden] { display: none !important; }
+  header { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.01em; font-size: 19px; }
+  header img { width: 36px; height: 36px; }
+  header span { margin-left: auto; font-size: 12.5px; font-weight: 600; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; }
+  .demo { margin: 18px 0 0; padding: 10px 14px; border-radius: 14px; background: var(--moss-soft); font-size: 14px; }
+  .demo code { font-size: 13px; }
+  .hero { text-align: center; padding: 40px 0 20px; }
+  .sloth { width: 120px; height: 120px; margin: 0 auto 10px; display: block; transform-origin: 50% 8%; animation: sway 6s ease-in-out infinite; }
+  @keyframes sway { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+  h1 { font-size: clamp(28px, 7vw, 40px); line-height: 1.1; letter-spacing: -.03em; margin: 0 0 10px; }
+  .lede { color: var(--muted); font-size: 18px; margin: 0 auto 24px; max-width: 30em; }
+  .payoff { display: inline-block; margin-bottom: 22px; padding: 6px 14px; border-radius: 999px; background: var(--moss-soft); color: var(--moss); font-weight: 700; }
+  .approve { display: block; width: min(420px, 100%); margin: 0 auto; min-height: 60px; border: 0; border-radius: 18px; background: var(--moss);
+    color: #fff; font-size: 19px; font-weight: 800; cursor: pointer; transition: transform .2s ease; }
+  .approve:active { transform: scale(.98); } .approve:disabled { opacity: .5; cursor: default; }
+  .secondary { margin-top: 10px; background: none; border: 0; color: var(--muted); cursor: pointer; text-decoration: underline; }
+  section.group { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 6px 16px; margin-top: 14px; }
+  .group h2 { display: flex; align-items: center; gap: 8px; font-size: 16px; margin: 12px 0 6px; }
+  .group h2 small { margin-left: auto; color: var(--muted); font-weight: 600; font-size: 13px; }
+  .folder::before { content: "📁"; } .renamed::before { content: "✏️"; } .left::before { content: "💤"; }
+  .row { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--line); }
+  .row input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--moss); }
+  .file { min-width: 0; }
+  .from { font-size: 14px; color: var(--muted); overflow-wrap: anywhere; }
+  .to { width: 100%; padding: 6px 8px; margin-top: 4px; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--text); }
+  .name { font-weight: 650; overflow-wrap: anywhere; }
+  .tag { font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 999px; background: var(--moss-soft); color: var(--moss); white-space: nowrap; }
+  .tag.gemma { color: var(--bark); } .why { grid-column: 2 / -1; font-size: 13px; color: var(--muted); }
+  .done { text-align: center; padding: 50px 0 10px; }
+  .done h1 { margin-bottom: 6px; }
+  .done .undo { margin-top: 18px; border: 1px solid var(--line); background: var(--card); color: var(--text); border-radius: 14px; padding: 10px 20px; font-weight: 700; cursor: pointer; }
+  footer { margin-top: 36px; text-align: center; color: var(--muted); font-size: 13px; }
+  footer a { color: inherit; }
+  @media (prefers-reduced-motion: reduce) { .sloth { animation: none; } * { transition: none !important; } }
+</style>
+</head>
+<body>
+<main>
+  <header><img src="sloth.svg" alt="" width="36" height="36">Tidy Sloth<span id="where">Runs on your Mac</span></header>
+  <p class="demo" id="demo-note" hidden>This is a demo with made-up files. Your own tidy runs on your Mac:
+    <code>uv run tidy-sloth</code> · <a href="https://github.com/mohamedaminehamdi/tidy-sloth">how to install</a></p>
+
+  <div id="review">
+    <div class="hero">
+      <img class="sloth" src="sloth.svg" alt="">
+      <h1 id="headline">Looking at your files…</h1>
+      <p class="lede" id="lede"></p>
+      <div class="payoff" id="payoff" hidden></div>
+      <button class="approve" id="approve" disabled>Approve all</button>
+      <button class="secondary" id="show">Let me check first</button>
+    </div>
+    <div id="groups" hidden></div>
+  </div>
+
+  <div class="done" id="done" hidden>
+    <img class="sloth" src="sloth.svg" alt="">
+    <h1 id="done-title">All tidy.</h1>
+    <p class="lede" id="done-text"></p>
+    <button class="undo" id="undo">Undo everything</button>
+  </div>
+
+  <footer>Learns your folders with <a href="https://github.com/PriorLabs/TabPFN">TabPFN</a> · names files with Gemma 4, locally ·
+    never deletes · <a href="https://github.com/mohamedaminehamdi/tidy-sloth">source</a></footer>
+</main>
+<script type="module" src="app.js"></script>
+</body>
+</html>

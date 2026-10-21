@@ -18,3 +18,13 @@ dev = [
 [tool.pytest.ini_options]
 pythonpath = ["."]
 markers = ["slow: needs TabPFN weights"]
+
+[project.scripts]
+tidy-sloth = "tidy_sloth.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["tidy_sloth"]
